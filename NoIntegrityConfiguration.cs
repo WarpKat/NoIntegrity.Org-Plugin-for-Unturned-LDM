@@ -1,5 +1,4 @@
 ﻿using Rocket.API;
-using NoIntegrity.Models;
 
 namespace NoIntegrity
 {
