@@ -41,6 +41,13 @@ namespace NoIntegrity
                 UnturnedPlayerEvents.OnPlayerRevive += Skills.OnPlayerRevive_MaximizeSkills;
             }
 
+            // Register Discord Message Events
+            if((bool)config.discordPlayerStates == true)
+            {
+                U.Events.OnPlayerConnected += DiscordMsg.OnPlayerConnected_DMJoin;
+                U.Events.OnPlayerDisconnected += DiscordMsg.OnPlayerDisconnected_DMLeft;
+            }
+
             // Register blacklist checks.
             UnturnedPlayerEvents.OnPlayerWear += ItemBlacklist.OnPlayerWear;
             ItemManager.onTakeItemRequested += ItemBlacklist.OnTakeItemRequested;
@@ -64,6 +71,13 @@ namespace NoIntegrity
             if (isMaxSkillsAuto == true)
             {
                 U.Events.OnPlayerConnected -= Skills.OnPlayerConnected_MaximizeSkills;
+            }
+
+            // De-Register Discord Message Events
+            if ((bool)config.discordPlayerStates == true)
+            {
+                U.Events.OnPlayerConnected -= DiscordMsg.OnPlayerConnected_DMJoin;
+                U.Events.OnPlayerDisconnected -= DiscordMsg.OnPlayerDisconnected_DMLeft;
             }
 
             // De-Register blacklist checks.

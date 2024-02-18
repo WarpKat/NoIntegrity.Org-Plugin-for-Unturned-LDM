@@ -17,6 +17,11 @@ namespace NoIntegrity
 
         public bool maxSkillsAuto;
 
+        public bool discordPlayerStates;
+        public string discordPlayerStatesBotname;
+        public string discordPlayerConnectWebhook;
+        public string discordPlayerDisconnectWebhook;
+
         public void LoadDefaults()
         {
             DBHost = "127.0.0.1";
@@ -29,6 +34,11 @@ namespace NoIntegrity
             slotsMaxSlots = 3;
 
             maxSkillsAuto = true;
+
+            discordPlayerStates = false;
+            discordPlayerStatesBotname = "My Discord Bot Name";
+            discordPlayerConnectWebhook = "https://your.discord.webhook.here";
+            discordPlayerDisconnectWebhook = "https://your.discord.webhook.here";
         }
     }
 }
