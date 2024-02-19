@@ -27,6 +27,12 @@ namespace NoIntegrity.Commands
 
             UnturnedPlayer player = (UnturnedPlayer)caller;
 
+            if (config.isCreative == false)
+            {
+                UnturnedChat.Say(caller, $"This command is not available.  Server is not configured for Creative mode.");
+                return;
+            }
+
             if (command.Length != 1)
             {
                 UnturnedChat.Say(caller, $"You need to specify a slot number from 1-{config.slotsMaxSlots}.");

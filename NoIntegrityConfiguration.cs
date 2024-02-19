@@ -13,6 +13,8 @@ namespace NoIntegrity
         public string DBUsername;
         public string DBPassword;
 
+        public bool isCreative;
+
         public int slotsMaxSlots;
 
         public bool maxSkillsAuto;
@@ -30,6 +32,8 @@ namespace NoIntegrity
             DBTablePrefix = "myDBTablePrefix";
             DBUsername = "myUsername";
             DBPassword = "myPassword";
+
+            isCreative = false;
 
             slotsMaxSlots = 3;
 

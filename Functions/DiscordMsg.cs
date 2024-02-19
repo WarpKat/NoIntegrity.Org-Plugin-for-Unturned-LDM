@@ -18,12 +18,13 @@ namespace NoIntegrity.Functions
             string thisWebhook = config.discordPlayerConnectWebhook;
 
             string thisPlayer = player.CharacterName;
-            string thisServerIP = SteamGameServer.GetPublicIP().ToString();
-            string thisServerPort = Provider.port.ToString();
+            //string thisServerIP = SteamGameServer.GetPublicIP().ToString();
+            //string thisServerPort = Provider.port.ToString();
             string thisServerName = Provider.serverName.ToString();
+            string thisServerMap = Provider.map.ToString();
             string thisServerID = SteamGameServer.GetSteamID().ToString();
             string thisBotName = config.discordPlayerStatesBotname;
-            string thisMessage = $"{thisPlayer} has joined {thisServerName}.\\nConnect directly using this server code:  {thisServerID}";
+            string thisMessage = $"{thisPlayer} has joined {thisServerName} - {thisServerMap}\\nConnect directly using this server code:  {thisServerID}";
             string thisContent = "{\"username\":\"" + thisBotName + "\",\"content\":\"" + thisMessage + "\"}";
 
             sendDiscordWebhook(thisWebhook, thisContent);
@@ -38,7 +39,8 @@ namespace NoIntegrity.Functions
             string thisPlayer = player.CharacterName;
             string thisServerName = Provider.serverName.ToString();
             string thisBotName = config.discordPlayerStatesBotname;
-            string thisMessage = $"{thisPlayer} has left {thisServerName}.";
+            string thisServerMap = Provider.map.ToString();
+            string thisMessage = $"{thisPlayer} has left {thisServerName} - {thisServerMap}";
             string thisContent = "{\"username\":\"" + thisBotName + "\",\"content\":\"" + thisMessage + "\"}";
 
             sendDiscordWebhook(thisWebhook, thisContent);
