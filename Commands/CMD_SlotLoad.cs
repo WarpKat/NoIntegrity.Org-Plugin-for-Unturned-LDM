@@ -2,6 +2,7 @@
 using Rocket.API;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
+using Rocket.Core.Utils;
 using SDG.Unturned;
 using System;
 using System.Collections.Generic;
@@ -84,71 +85,78 @@ namespace NoIntegrity.Commands
             ushort hisGlasses = 0;
             ushort hisGlassesQuality = 0;
 
-            int[,] hisClothing = DBHandler.dbLoadClothing(player, Int32.Parse(command[0]));
-            for (int i = 0; i < hisClothing.GetLength(0); i++)
+            TaskDispatcher.RunAsync(() =>
             {
-                switch (i)
+                int[,] hisClothing = DBHandler.dbLoadClothing(player, Int32.Parse(command[0]));
+                List<string[]> hisInventory = DBHandler.dbLoadInventory(player, Int32.Parse(command[0]));
+
+                TaskDispatcher.QueueOnMainThread(() =>
                 {
-                    case 0:
-                        hisShirt = (ushort)hisClothing[i, 0];
-                        hisShirtQuality = (ushort)hisClothing[i, 1];
-                        break;
-                    case 1:
-                        hisPants = (ushort)hisClothing[i, 0];
-                        hisPantsQuality = (ushort)hisClothing[i, 1];
-                        break;
-                    case 2:
-                        hisHat = (ushort)hisClothing[i, 0];
-                        hisHatQuality = (ushort)hisClothing[i, 1];
-                        break;
-                    case 3:
-                        hisBackpack = (ushort)hisClothing[i, 0];
-                        hisBackpackQuality = (ushort)hisClothing[i, 1];
-                        break;
-                    case 4:
-                        hisVest = (ushort)hisClothing[i, 0];
-                        hisVestQuality = (ushort)hisClothing[i, 1];
-                        break;
-                    case 5:
-                        hisMask = (ushort)hisClothing[i, 0];
-                        hisMaskQuality = (ushort)hisClothing[i, 1];
-                        break;
-                    case 6:
-                        hisGlasses = (ushort)hisClothing[i, 0];
-                        hisGlassesQuality = (ushort)hisClothing[i, 1];
-                        break;
-                }
-            }
+                    for (int i = 0; i < hisClothing.GetLength(0); i++)
+                    {
+                        switch (i)
+                        {
+                            case 0:
+                                hisShirt = (ushort)hisClothing[i, 0];
+                                hisShirtQuality = (ushort)hisClothing[i, 1];
+                                break;
+                            case 1:
+                                hisPants = (ushort)hisClothing[i, 0];
+                                hisPantsQuality = (ushort)hisClothing[i, 1];
+                                break;
+                            case 2:
+                                hisHat = (ushort)hisClothing[i, 0];
+                                hisHatQuality = (ushort)hisClothing[i, 1];
+                                break;
+                            case 3:
+                                hisBackpack = (ushort)hisClothing[i, 0];
+                                hisBackpackQuality = (ushort)hisClothing[i, 1];
+                                break;
+                            case 4:
+                                hisVest = (ushort)hisClothing[i, 0];
+                                hisVestQuality = (ushort)hisClothing[i, 1];
+                                break;
+                            case 5:
+                                hisMask = (ushort)hisClothing[i, 0];
+                                hisMaskQuality = (ushort)hisClothing[i, 1];
+                                break;
+                            case 6:
+                                hisGlasses = (ushort)hisClothing[i, 0];
+                                hisGlassesQuality = (ushort)hisClothing[i, 1];
+                                break;
+                        }
+                    }
 
-            player.Player.clothing.updateClothes(
-                hisShirt, (byte)hisShirtQuality, new byte[0],
-                hisPants, (byte)hisPantsQuality, new byte[0],
-                hisHat, (byte)hisHatQuality, new byte[0],
-                hisBackpack, (byte)hisBackpackQuality, new byte[0],
-                hisVest, (byte)hisVestQuality, new byte[0],
-                hisMask, (byte)hisMaskQuality, new byte[0],
-                hisGlasses, (byte)hisGlassesQuality, new byte[0]
-                );
+                    player.Player.clothing.updateClothes(
+                        hisShirt, (byte)hisShirtQuality, new byte[0],
+                        hisPants, (byte)hisPantsQuality, new byte[0],
+                        hisHat, (byte)hisHatQuality, new byte[0],
+                        hisBackpack, (byte)hisBackpackQuality, new byte[0],
+                        hisVest, (byte)hisVestQuality, new byte[0],
+                        hisMask, (byte)hisMaskQuality, new byte[0],
+                        hisGlasses, (byte)hisGlassesQuality, new byte[0]
+                        );
 
-            // Fetch all of the stored inventory for the preferred slot.
-            List<string[]> hisInventory = DBHandler.dbLoadInventory(player, Int32.Parse(command[0]));
-            foreach (string[] row in hisInventory)
-            {
-                // Process each row
-                byte thisPage = Convert.ToByte(row[2]);
-                byte thisX = Convert.ToByte(row[6]);
-                byte thisY = Convert.ToByte(row[7]);
-                byte thisRot = Convert.ToByte(row[8]);
-                ushort thisItemID = Convert.ToUInt16(row[3]);
-                byte[] thisMeta = Bytes.stringToByte(row[4]);
-                byte thisAmount = Convert.ToByte(row[9]);
-                byte thisQuality = Convert.ToByte(row[5]);
+                    // Fetch all of the stored inventory for the preferred slot.
+                    foreach (string[] row in hisInventory)
+                    {
+                        // Process each row
+                        byte thisPage = Convert.ToByte(row[2]);
+                        byte thisX = Convert.ToByte(row[6]);
+                        byte thisY = Convert.ToByte(row[7]);
+                        byte thisRot = Convert.ToByte(row[8]);
+                        ushort thisItemID = Convert.ToUInt16(row[3]);
+                        byte[] thisMeta = Bytes.stringToByte(row[4]);
+                        byte thisAmount = Convert.ToByte(row[9]);
+                        byte thisQuality = Convert.ToByte(row[5]);
 
-                player.Inventory.ReceiveItemAdd(thisPage, thisX, thisY, thisRot, thisItemID, thisAmount, thisQuality, thisMeta);
-            }
+                        player.Inventory.ReceiveItemAdd(thisPage, thisX, thisY, thisRot, thisItemID, thisAmount, thisQuality, thisMeta);
+                    }
 
-            player.TriggerEffect(10);
-            UnturnedChat.Say(caller, $"Loaded slot {thisSlotNum}.");
+                    player.TriggerEffect(10);
+                    UnturnedChat.Say(caller, $"Loaded slot {thisSlotNum}.");
+                });
+            });
         }
     }
 }
