@@ -77,7 +77,6 @@
     <Compile Include="Functions\DBHandler.cs" />
     <Compile Include="Functions\Bytes.cs" />
     <Compile Include="Functions\DiscordMsg.cs" />
-    <Compile Include="Functions\Helper.cs" />
     <Compile Include="Functions\ItemBlacklist.cs" />
     <Compile Include="Functions\Skills.cs" />
     <Compile Include="Models\SLOTS_Clothes.cs" />
