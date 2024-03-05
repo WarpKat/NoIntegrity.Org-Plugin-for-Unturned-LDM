@@ -77,7 +77,7 @@ Commands:
    Permission:  bldel
 <br>
 <br>
-/stats x
+/stats
 <br>
     Provides Kills/Deaths/Headshot Percentage and KDR stats to the user.
  <br>
