@@ -19,6 +19,9 @@ namespace NoIntegrity
 
         public bool maxSkillsAuto;
 
+        public string statsPrefix;
+        public bool statsEnable;
+
         public bool discordPlayerStates;
         public string discordPlayerStatesBotname;
         public string discordPlayerConnectWebhook;
@@ -38,6 +41,9 @@ namespace NoIntegrity
             slotsMaxSlots = 3;
 
             maxSkillsAuto = true;
+
+            statsPrefix = "Unturned00";
+            statsEnable = false;
 
             discordPlayerStates = false;
             discordPlayerStatesBotname = "My Discord Bot Name";

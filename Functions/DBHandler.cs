@@ -128,6 +128,37 @@ namespace NoIntegrity.Functions
             }
         }
 
+        public static void dbCheckStatsSchema()
+        {
+            try
+            {
+                NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
+
+                using MySqlConnection mySqlConnection = DBHandler.dbCreateConnection();
+                using MySqlCommand mySqlCommand = mySqlConnection.CreateCommand();
+
+                var myTablePrefix = config.statsPrefix;
+
+                mySqlCommand.CommandText = "SHOW TABLES LIKE '" + myTablePrefix + "_Statistics'";
+
+
+                mySqlConnection.Open();
+                if (mySqlCommand.ExecuteScalar() == null)
+                {
+                    mySqlCommand.CommandText = "CREATE TABLE `" + myTablePrefix + "_Statistics` (`SteamID` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL, `kKill` int NOT NULL DEFAULT '0', `kHeadshot` int NOT NULL DEFAULT '0', `dBleeding` int NOT NULL DEFAULT '0', `dBones` int NOT NULL DEFAULT '0', `dFreezing` int NOT NULL DEFAULT '0', `dBurning` int NOT NULL DEFAULT '0', `dFood` int NOT NULL DEFAULT '0', `dWater` int NOT NULL DEFAULT '0', `dGun` int NOT NULL DEFAULT '0', `dMelee` int NOT NULL DEFAULT '0', `dZombie` int NOT NULL DEFAULT '0', `dAnimal` int NOT NULL DEFAULT '0', `dKill` int NOT NULL DEFAULT '0', `dInfection` int NOT NULL DEFAULT '0', `dPunch` int NOT NULL DEFAULT '0', `dBreath` int NOT NULL DEFAULT '0', `dRoadkill` int NOT NULL DEFAULT '0', `dVehicle` int NOT NULL DEFAULT '0', `dGrenade` int NOT NULL DEFAULT '0', `dShred` int NOT NULL DEFAULT '0', `dLandmine` int NOT NULL DEFAULT '0', `dArena` int NOT NULL DEFAULT '0', `dSuicide` int NOT NULL DEFAULT '0', `dMissile` int NOT NULL DEFAULT '0', `dCharge` int NOT NULL DEFAULT '0', `dSplash` int NOT NULL DEFAULT '0', `dSentry` int NOT NULL DEFAULT '0', `dAcid` int NOT NULL DEFAULT '0', `dBoulder` int NOT NULL DEFAULT '0', `dBurner` int NOT NULL DEFAULT '0', `dSpit` int NOT NULL DEFAULT '0', `dSpark` int NOT NULL DEFAULT '0', `dOther` int NOT NULL DEFAULT '0', `FirstRecorded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+                    mySqlCommand.ExecuteNonQuery();
+
+                    mySqlCommand.CommandText = "ALTER TABLE `" + myTablePrefix + "_Statistics` ADD UNIQUE(`SteamID`);";
+                    mySqlCommand.ExecuteNonQuery();
+                }
+                mySqlConnection.Close();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException(ex);
+            }
+        }
+
         public static int dbGetNumSlots(UnturnedPlayer player)
         {
             try
@@ -461,6 +492,195 @@ namespace NoIntegrity.Functions
                 Logger.LogException(ex);
                 return 0;
             }
+        }
+
+        public static void dbUpdateStats(string hisSteamID, string statType)
+        {
+            try
+            {
+                NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
+                Thread thread = new Thread(() =>
+                {
+                    using MySqlConnection mySqlConnection = DBHandler.dbCreateConnection();
+                    using MySqlCommand mySqlCommand = mySqlConnection.CreateCommand();
+
+                    var myTablePrefix = config.statsPrefix;
+
+                    mySqlCommand.CommandText = $"INSERT INTO `{myTablePrefix}_Statistics` (`SteamID`, `{statType}`) VALUES('{hisSteamID}', 1) ON DUPLICATE KEY UPDATE `{statType}` = 1 + (SELECT `{statType}` where `SteamID` = '{hisSteamID}')";
+
+                    mySqlConnection.Open();
+                    mySqlCommand.ExecuteScalar();
+                    mySqlConnection.Close();
+                });
+                thread.Start();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException(ex);
+            }
+        }
+
+        public static string[] dbFetchStats(string hisSteamID)
+        {
+            string[] hisStats = new string[] {"0","0","0"};
+
+            try
+            {
+                NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
+
+                using MySqlConnection mySqlConnection = DBHandler.dbCreateConnection();
+                using MySqlCommand mySqlCommand = mySqlConnection.CreateCommand();
+
+                var myTablePrefix = config.statsPrefix;
+
+                // Check to see if the entry for stats exists for this user; if not, create the record.
+                using (MySqlConnection connection = DBHandler.dbCreateConnection())
+                {
+                    connection.Open();
+
+                    string qryGetUserCount = $@"
+                        SELECT
+                            COUNT(*)
+                        FROM
+                            `{myTablePrefix}_Statistics`
+                        WHERE
+                            `SteamID` = '{hisSteamID}'
+                    ";
+
+                    MySqlCommand cmd = new MySqlCommand(qryGetUserCount, connection);
+                    long myBLItemCount = (long)cmd.ExecuteScalar();
+
+                    if(myBLItemCount == 0)
+                    {
+                        string qryNewRecord = $@"
+                            INSERT INTO
+                                `{myTablePrefix}_Statistics`
+                                    (`SteamID`)
+                                VALUES
+                                    ('{hisSteamID}')
+                        ";
+                        MySqlCommand cmd1 = new MySqlCommand(qryNewRecord, connection);
+                        cmd1.ExecuteScalar();
+                    }
+
+                    connection.Close();
+                }
+
+                // Get his kills
+                using (MySqlConnection connection = DBHandler.dbCreateConnection())
+                {
+                    connection.Open();
+
+                    string qryGetKills = $@"
+                        SELECT
+                            (
+                                `kKill`
+                            +   `kHeadshot`
+                            ) as hisKills
+                        FROM
+                            `{myTablePrefix}_Statistics`
+                        WHERE
+                            `SteamID` = '{hisSteamID}'
+                    ";
+
+                    MySqlCommand cmd = new MySqlCommand(qryGetKills, connection);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        reader.Read();
+                        hisStats[0] = reader.GetValue(0).ToString();
+                    }
+                    connection.Close();
+                }
+
+                // Get his headshots.
+                using (MySqlConnection connection = DBHandler.dbCreateConnection())
+                {
+                    connection.Open();
+
+                    string qryGetHeadshots = $@"
+                        SELECT
+                            (
+                                `kHeadshot`
+                            ) as hisHeadshots
+                        FROM
+                            `{myTablePrefix}_Statistics`
+                        WHERE
+                            `SteamID` = '{hisSteamID}'
+                    ";
+
+                    MySqlCommand cmd = new MySqlCommand(qryGetHeadshots, connection);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        reader.Read();
+                        hisStats[1] = reader.GetValue(0).ToString();
+                    }
+                    connection.Close();
+                }
+
+                // Get his deaths.
+                using (MySqlConnection connection = DBHandler.dbCreateConnection())
+                {
+                    connection.Open();
+
+                    string qryGetDeaths = $@"
+                        SELECT
+                            (
+                                `dBleeding`
+                            +   `dBones`
+                            +   `dFreezing`
+                            +   `dBurning`
+                            +   `dFood`
+                            +   `dWater`
+                            +   `dGun`
+                            +   `dMelee`
+                            +   `dZombie`
+                            +   `dAnimal`
+                            +   `dKill`
+                            +   `dInfection`
+                            +   `dPunch`
+                            +   `dBreath`
+                            +   `dRoadkill`
+                            +   `dVehicle`
+                            +   `dGrenade`
+                            +   `dShred`
+                            +   `dLandmine`
+                            +   `dArena`
+                            +   `dSuicide`
+                            +   `dMissile`
+                            +   `dCharge`
+                            +   `dSplash`
+                            +   `dSentry`
+                            +   `dAcid`
+                            +   `dBoulder`
+                            +   `dBurner`
+                            +   `dSpit`
+                            +   `dSpark`
+                            +   `dOther`
+                            ) as hisDeaths
+                        FROM
+                            `{myTablePrefix}_Statistics`
+                        WHERE
+                            `SteamID` = '{hisSteamID}'
+                    ";
+
+                    MySqlCommand cmd = new MySqlCommand(qryGetDeaths, connection);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        reader.Read();
+                        hisStats[2] = reader.GetValue(0).ToString();
+                    }
+                    connection.Close();
+                }
+
+                return hisStats;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException(ex);
+            }
+
+            return hisStats;
         }
     }
 }

@@ -29,14 +29,22 @@ namespace NoIntegrity
 
             NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
 
-            bool isMaxSkillsAuto = config.maxSkillsAuto;
-
+            // Check the DB schemas
             DBHandler.dbCheckClothingSchema();
             DBHandler.dbCheckInventorySchema();
             DBHandler.dbCheckBlacklistSchema();
 
+            if((bool)config.statsEnable == true)
+            {
+                DBHandler.dbCheckStatsSchema();
+
+                // Register stats.
+                UnturnedPlayerEvents.OnPlayerDeath += Stats.UpdateStats_OnPlayerDeath;
+            }
+
             // Register Maximized Skills Events
-            if(isMaxSkillsAuto == true){
+            if ((bool)config.maxSkillsAuto == true)
+            { 
                 U.Events.OnPlayerConnected += Skills.OnPlayerConnected_MaximizeSkills;
                 UnturnedPlayerEvents.OnPlayerRevive += Skills.OnPlayerRevive_MaximizeSkills;
             }
@@ -65,10 +73,8 @@ namespace NoIntegrity
         {
             NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
 
-            bool isMaxSkillsAuto = config.maxSkillsAuto;
-
             // De-Register Maximized Skills Events
-            if (isMaxSkillsAuto == true)
+            if ((bool)config.maxSkillsAuto == true)
             {
                 U.Events.OnPlayerConnected -= Skills.OnPlayerConnected_MaximizeSkills;
             }
@@ -79,6 +85,13 @@ namespace NoIntegrity
                 U.Events.OnPlayerConnected -= DiscordMsg.OnPlayerConnected_DMJoin;
                 U.Events.OnPlayerDisconnected -= DiscordMsg.OnPlayerDisconnected_DMLeft;
             }
+
+            if ((bool)config.statsEnable == true)
+            {
+                // De-Register stats.
+                UnturnedPlayerEvents.OnPlayerDeath -= Stats.UpdateStats_OnPlayerDeath;
+            }
+
 
             // De-Register blacklist checks.
             UnturnedPlayerEvents.OnPlayerWear -= ItemBlacklist.OnPlayerWear;

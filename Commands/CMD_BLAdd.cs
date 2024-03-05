@@ -22,8 +22,6 @@ namespace NoIntegrity.Commands
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
-            NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
-
             UnturnedPlayer player = (UnturnedPlayer)caller;
 
             if (command.Length != 1)

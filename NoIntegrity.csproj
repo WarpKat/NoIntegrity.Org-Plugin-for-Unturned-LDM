@@ -74,11 +74,13 @@
     <Compile Include="Commands\CMD_BLAdd.cs" />
     <Compile Include="Commands\CMD_SlotLoad.cs" />
     <Compile Include="Commands\CMD_SlotSave.cs" />
+    <Compile Include="Commands\CMD_Stats.cs" />
     <Compile Include="Functions\DBHandler.cs" />
     <Compile Include="Functions\Bytes.cs" />
     <Compile Include="Functions\DiscordMsg.cs" />
     <Compile Include="Functions\ItemBlacklist.cs" />
     <Compile Include="Functions\Skills.cs" />
+    <Compile Include="Functions\Stats.cs" />
     <Compile Include="Models\SLOTS_Clothes.cs" />
     <Compile Include="Models\SLOTS_Clothing.cs" />
     <Compile Include="Models\SLOTS_Items.cs" />
