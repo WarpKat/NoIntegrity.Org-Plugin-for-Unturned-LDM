@@ -5,7 +5,6 @@ using SDG.Unturned;
 using NoIntegrity.Models;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace NoIntegrity.Functions
 {
@@ -159,6 +158,7 @@ namespace NoIntegrity.Functions
             }
         }
 
+        /*
         public static int dbGetNumSlots(UnturnedPlayer player)
         {
             try
@@ -216,6 +216,7 @@ namespace NoIntegrity.Functions
                 return 0;
             }
         }
+        */
 
         public static int dbSaveInventory(UnturnedPlayer player, int slotID)
         {
@@ -223,72 +224,69 @@ namespace NoIntegrity.Functions
             {
                 NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
 
-                Thread thread = new Thread(() =>
+                using MySqlConnection mySqlConnection = DBHandler.dbCreateConnection();
+                using MySqlCommand mySqlCommand = mySqlConnection.CreateCommand();
+
+                PlayerClothing clo = player.Player.clothing;
+
+                SLOTS_Clothing hisHat = new SLOTS_Clothing(clo.hat, clo.hatQuality, clo.hatState);
+                SLOTS_Clothing hisGlasses = new SLOTS_Clothing(clo.glasses, clo.glassesQuality, clo.glassesState);
+                SLOTS_Clothing hisMask = new SLOTS_Clothing(clo.mask, clo.maskQuality, clo.maskState);
+                SLOTS_Clothing hisShirt = new SLOTS_Clothing(clo.shirt, clo.shirtQuality, clo.shirtState);
+                SLOTS_Clothing hisVest = new SLOTS_Clothing(clo.vest, clo.vestQuality, clo.vestState);
+                SLOTS_Clothing hisPants = new SLOTS_Clothing(clo.pants, clo.pantsQuality, clo.pantsState);
+                SLOTS_Clothing hisBackpack = new SLOTS_Clothing(clo.backpack, clo.backpackQuality, clo.backpackState);
+
+                int[,] hisClothing = {
+                { hisShirt.id, hisShirt.quality },
+                { hisPants.id, hisPants.quality },
+                { hisHat.id, hisHat.quality },
+                { hisBackpack.id, hisBackpack.quality },
+                { hisVest.id, hisVest.quality },
+                { hisMask.id, hisMask.quality },
+                { hisGlasses.id, hisGlasses.quality }
+                };
+
+                // Delete the clothing slot requested.
+                mySqlConnection.Open();
+                mySqlCommand.CommandText = $"DELETE FROM `{config.DBTablePrefix}_Clothing` WHERE `SteamID`='{player.CSteamID}' and `SlotID`='{slotID}'";
+                mySqlCommand.ExecuteScalar();
+
+                // Populate the slot with new clothing or empty asset.
+                for (int cloIDX = 0; cloIDX < hisClothing.GetLength(0); cloIDX++)
                 {
-                    using MySqlConnection mySqlConnection = DBHandler.dbCreateConnection();
-                    using MySqlCommand mySqlCommand = mySqlConnection.CreateCommand();
-
-                    PlayerClothing clo = player.Player.clothing;
-
-                    SLOTS_Clothing hisHat = new SLOTS_Clothing(clo.hat, clo.hatQuality, clo.hatState);
-                    SLOTS_Clothing hisGlasses = new SLOTS_Clothing(clo.glasses, clo.glassesQuality, clo.glassesState);
-                    SLOTS_Clothing hisMask = new SLOTS_Clothing(clo.mask, clo.maskQuality, clo.maskState);
-                    SLOTS_Clothing hisShirt = new SLOTS_Clothing(clo.shirt, clo.shirtQuality, clo.shirtState);
-                    SLOTS_Clothing hisVest = new SLOTS_Clothing(clo.vest, clo.vestQuality, clo.vestState);
-                    SLOTS_Clothing hisPants = new SLOTS_Clothing(clo.pants, clo.pantsQuality, clo.pantsState);
-                    SLOTS_Clothing hisBackpack = new SLOTS_Clothing(clo.backpack, clo.backpackQuality, clo.backpackState);
-
-                    int[,] hisClothing = {
-                    { hisShirt.id, hisShirt.quality },
-                    { hisPants.id, hisPants.quality },
-                    { hisHat.id, hisHat.quality },
-                    { hisBackpack.id, hisBackpack.quality },
-                    { hisVest.id, hisVest.quality },
-                    { hisMask.id, hisMask.quality },
-                    { hisGlasses.id, hisGlasses.quality }
-                    };
-
-                    // Delete the clothing slot requested.
-                    mySqlConnection.Open();
-                    mySqlCommand.CommandText = $"DELETE FROM `{config.DBTablePrefix}_Clothing` WHERE `SteamID`='{player.CSteamID}' and `SlotID`='{slotID}'";
+                    mySqlCommand.CommandText = $"INSERT INTO `{config.DBTablePrefix}_Clothing` (`SteamID`, `SlotID`, `ClothingIDX`, `ClothingID`, `Quality`, `Timestamp`) VALUES('{player.CSteamID}', '{slotID}', '{cloIDX}', '{hisClothing[cloIDX, 0]}', '{hisClothing[cloIDX, 1]}', CURRENT_TIMESTAMP)";
                     mySqlCommand.ExecuteScalar();
+                }
 
-                    // Populate the slot with new clothing or empty asset.
-                    for (int cloIDX = 0; cloIDX < hisClothing.GetLength(0); cloIDX++)
+                // Delete the inventory slot requested.
+                mySqlCommand.CommandText = $"DELETE FROM `{config.DBTablePrefix}_Inventory` WHERE `SteamID`='{player.CSteamID}' and `SlotID`='{slotID}'";
+                mySqlCommand.ExecuteScalar();
+
+                // Populate the slot with new inventory.
+                for (byte p = 0; p < PlayerInventory.PAGES - 1; p++)
+                {
+                    for (byte i = 0; i < player.Inventory.getItemCount(p); i++)
                     {
-                        mySqlCommand.CommandText = $"INSERT INTO `{config.DBTablePrefix}_Clothing` (`SteamID`, `SlotID`, `ClothingIDX`, `ClothingID`, `Quality`, `Timestamp`) VALUES('{player.CSteamID}', '{slotID}', '{cloIDX}', '{hisClothing[cloIDX, 0]}', '{hisClothing[cloIDX, 1]}', CURRENT_TIMESTAMP)";
+                        Item item = player.Inventory.getItem(p, i).item; // Get the user's item in current page
+
+                        string hisMetaData = "0";
+                        if (Bytes.bytesToCDString(item.metadata).Length > 0)
+                        {
+                            hisMetaData = Bytes.bytesToCDString(item.metadata);
+                        }
+
+                        var itemX = player.Inventory.getItem(p, i).x;
+                        var itemY = player.Inventory.getItem(p, i).y;
+                        var itemRot = player.Inventory.getItem(p, i).rot;
+                        var itemMag = player.Inventory.getItem(p, i).item.amount;
+
+                        mySqlCommand.CommandText = $"INSERT INTO `{config.DBTablePrefix}_Inventory` (`SteamID`, `SlotID`, `Page`, `ItemID`, `Metadata`, `Quality`, `pageX`, `pageY`, `pageRot`, `MagAmount`, `Timestamp`) VALUES ('{player.CSteamID}', '{slotID}', '{p}', '{item.id}', '{hisMetaData}', '{item.quality}', '{itemX}', '{itemY}', '{itemRot}', '{itemMag}', CURRENT_TIMESTAMP);";
                         mySqlCommand.ExecuteScalar();
                     }
+                }
+                mySqlConnection.Close();
 
-                    // Delete the inventory slot requested.
-                    mySqlCommand.CommandText = $"DELETE FROM `{config.DBTablePrefix}_Inventory` WHERE `SteamID`='{player.CSteamID}' and `SlotID`='{slotID}'";
-                    mySqlCommand.ExecuteScalar();
-
-                    // Populate the slot with new inventory.
-                    for (byte p = 0; p < PlayerInventory.PAGES - 1; p++)
-                    {
-                        for (byte i = 0; i < player.Inventory.getItemCount(p); i++)
-                        {
-                            Item item = player.Inventory.getItem(p, i).item; // Get the user's item in current page
-
-                            string hisMetaData = "0";
-                            if (Bytes.bytesToCDString(item.metadata).Length > 0)
-                            {
-                                hisMetaData = Bytes.bytesToCDString(item.metadata);
-                            }
-
-                            var itemX = player.Inventory.getItem(p, i).x;
-                            var itemY = player.Inventory.getItem(p, i).y;
-                            var itemRot = player.Inventory.getItem(p, i).rot;
-                            var itemMag = player.Inventory.getItem(p, i).item.amount;
-
-                            mySqlCommand.CommandText = $"INSERT INTO `{config.DBTablePrefix}_Inventory` (`SteamID`, `SlotID`, `Page`, `ItemID`, `Metadata`, `Quality`, `pageX`, `pageY`, `pageRot`, `MagAmount`, `Timestamp`) VALUES ('{player.CSteamID}', '{slotID}', '{p}', '{item.id}', '{hisMetaData}', '{item.quality}', '{itemX}', '{itemY}', '{itemRot}', '{itemMag}', CURRENT_TIMESTAMP);";
-                            mySqlCommand.ExecuteScalar();
-                        }
-                    }
-                    mySqlConnection.Close();
-                });
-                thread.Start();
                 return 1;
             }
             catch (Exception ex)
@@ -302,7 +300,6 @@ namespace NoIntegrity.Functions
         {
             try
             {
-
                 NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
 
                 int hisClothingIndex = 0;
@@ -499,20 +496,16 @@ namespace NoIntegrity.Functions
             try
             {
                 NoIntegrityConfiguration config = NoIntegrity.Instance.Configuration.Instance;
-                Thread thread = new Thread(() =>
-                {
-                    using MySqlConnection mySqlConnection = DBHandler.dbCreateConnection();
-                    using MySqlCommand mySqlCommand = mySqlConnection.CreateCommand();
+                using MySqlConnection mySqlConnection = DBHandler.dbCreateConnection();
+                using MySqlCommand mySqlCommand = mySqlConnection.CreateCommand();
 
-                    var myTablePrefix = config.statsPrefix;
+                var myTablePrefix = config.statsPrefix;
 
-                    mySqlCommand.CommandText = $"INSERT INTO `{myTablePrefix}_Statistics` (`SteamID`, `{statType}`) VALUES('{hisSteamID}', 1) ON DUPLICATE KEY UPDATE `{statType}` = 1 + (SELECT `{statType}` where `SteamID` = '{hisSteamID}')";
+                mySqlCommand.CommandText = $"INSERT INTO `{myTablePrefix}_Statistics` (`SteamID`, `{statType}`) VALUES('{hisSteamID}', 1) ON DUPLICATE KEY UPDATE `{statType}` = 1 + (SELECT `{statType}` where `SteamID` = '{hisSteamID}')";
 
-                    mySqlConnection.Open();
-                    mySqlCommand.ExecuteScalar();
-                    mySqlConnection.Close();
-                });
-                thread.Start();
+                mySqlConnection.Open();
+                mySqlCommand.ExecuteScalar();
+                mySqlConnection.Close();
             }
             catch (Exception ex)
             {

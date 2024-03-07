@@ -1,10 +1,10 @@
 ﻿using NoIntegrity.Functions;
 using Rocket.API;
+using Rocket.Core.Utils;
 using Rocket.Unturned.Player;
 using Rocket.Unturned.Chat;
 using System.Collections.Generic;
 using System;
-using Rocket.Core.Utils;
 
 namespace NoIntegrity.Commands
 {
@@ -55,8 +55,6 @@ namespace NoIntegrity.Commands
                     }
 
                     UnturnedChat.Say(player, $"Kills/Headshots/Deaths:  {hisKills}/{hisHeadshots}/{hisDeaths}");
-                    //UnturnedChat.Say(player, $"Your Total Headshots:  {hisHeadshots}");
-                    //UnturnedChat.Say(player, $"Your Total Deaths:  {hisDeaths}");
                     UnturnedChat.Say(player, $"KDR:  {hisKDR}/HSP:  {hisHSPct}%");
                 });
             });

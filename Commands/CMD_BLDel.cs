@@ -1,5 +1,6 @@
 ﻿using NoIntegrity.Functions;
 using Rocket.API;
+using Rocket.Core.Utils;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
@@ -33,17 +34,22 @@ namespace NoIntegrity.Commands
             }
             
             int hisItemID = Int32.Parse(command[0]);
-            int tryBLDel = DBHandler.dbDelBLItem(hisItemID);
-            if (tryBLDel == 0)
-            {
-                UnturnedChat.Say(caller, $"Item {hisItemID} does not exist in the database.");
-                return;
-            }
-                else
-            {
-                UnturnedChat.Say(caller, $"Item {hisItemID} deleted from the blacklist with immediate effect.");
-                return;
-            }
+
+            TaskDispatcher.RunAsync(() => {
+                int tryBLDel = DBHandler.dbDelBLItem(hisItemID);
+
+                TaskDispatcher.QueueOnMainThread(() =>
+                {
+                    if (tryBLDel == 0)
+                    {
+                        UnturnedChat.Say(caller, $"Item {hisItemID} does not exist in the database.");
+                    }
+                    else
+                    {
+                        UnturnedChat.Say(caller, $"Item {hisItemID} deleted from the blacklist with immediate effect.");
+                    }
+                });
+            });
         }
     }
 }

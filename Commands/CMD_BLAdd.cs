@@ -1,5 +1,6 @@
 ﻿using NoIntegrity.Functions;
 using Rocket.API;
+using Rocket.Core.Utils;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
@@ -31,15 +32,22 @@ namespace NoIntegrity.Commands
             }
             
             int hisItemID = Int32.Parse(command[0]);
-            int tryBLAdd = DBHandler.dbAddBLItem(player, hisItemID);
-            if (tryBLAdd > 0)
-            {
-                UnturnedChat.Say(caller, $"Item {hisItemID} added to the blacklist with immediate effect.");
-            }
-                else
-            {
-                UnturnedChat.Say(caller, "Unable to add item to blacklist - it already exists.");
-            }
+
+            TaskDispatcher.RunAsync(() => {
+                int tryBLAdd = DBHandler.dbAddBLItem(player, hisItemID);
+
+                TaskDispatcher.QueueOnMainThread(() =>
+                {
+                    if (tryBLAdd > 0)
+                    {
+                        UnturnedChat.Say(caller, $"Item {hisItemID} added to the blacklist with immediate effect.");
+                    }
+                    else
+                    {
+                        UnturnedChat.Say(caller, "Unable to add item to blacklist - it already exists.");
+                    }
+                });
+            });
         }
     }
 }

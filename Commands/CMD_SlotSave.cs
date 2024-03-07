@@ -1,5 +1,6 @@
 ﻿using NoIntegrity.Functions;
 using Rocket.API;
+using Rocket.Core.Utils;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
@@ -55,20 +56,28 @@ namespace NoIntegrity.Commands
                 return;
             }
 
-            if( thisSlotNum > config.slotsMaxSlots)
+            if(thisSlotNum > config.slotsMaxSlots)
             {
                 UnturnedChat.Say(caller, $"You may not save a slot greater than {config.slotsMaxSlots} on this server.");
                 return;
             }
 
-            int isSaved = DBHandler.dbSaveInventory(player, thisSlotNum);
-
-            if (isSaved == 1) {
-                UnturnedChat.Say(caller, $"Saved slot {thisSlotNum}.");
-            } else
+            TaskDispatcher.RunAsync(() =>
             {
-                UnturnedChat.Say(caller, $"Unable to save slot {thisSlotNum}.");
-            }
+                int isSaved = DBHandler.dbSaveInventory(player, thisSlotNum);
+
+                TaskDispatcher.QueueOnMainThread(() =>
+                {
+                    if (isSaved == 1)
+                    {
+                        UnturnedChat.Say(caller, $"Saved slot {thisSlotNum}.");
+                    }
+                    else
+                    {
+                        UnturnedChat.Say(caller, $"Unable to save slot {thisSlotNum}.");
+                    }
+                });
+            });
 
             return;
         }
