@@ -75,3 +75,10 @@ Commands:
     For admin use, deletes item x from the blacklist with immediate effect.
  <br>
    Permission:  bldel
+<br>
+<br>
+/stats
+<br>
+    Provides Kills/Deaths/Headshot Percentage and KDR stats to the user.
+ <br>
+   Permission:  stats
