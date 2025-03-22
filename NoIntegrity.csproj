@@ -70,8 +70,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\CMD_Ammo.cs" />
     <Compile Include="Commands\CMD_BLDel.cs" />
     <Compile Include="Commands\CMD_BLAdd.cs" />
+    <Compile Include="Commands\CMD_BuildInfo.cs" />
     <Compile Include="Commands\CMD_SlotLoad.cs" />
     <Compile Include="Commands\CMD_SlotSave.cs" />
     <Compile Include="Commands\CMD_Stats.cs" />

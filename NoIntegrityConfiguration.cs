@@ -19,6 +19,8 @@ namespace NoIntegrity
 
         public bool maxSkillsAuto;
 
+        public int ammoClipLimit;
+
         public string statsPrefix;
         public bool statsEnable;
 
@@ -41,6 +43,8 @@ namespace NoIntegrity
             slotsMaxSlots = 3;
 
             maxSkillsAuto = true;
+
+            ammoClipLimit = 10;
 
             statsPrefix = "Unturned00";
             statsEnable = false;
