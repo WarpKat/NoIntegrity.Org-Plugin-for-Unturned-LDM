@@ -11,6 +11,7 @@ Some code was borrowed from other projects, which might be considered defunct:
 - Item Vault
 - Loadouts
 - BTAdvanceRestrictor
+- EasyAmmo
 ...and probably a few others.
 <br><br>
 Also thanks to BlazingFlame and MrKan in the LDM Community Discord for their
@@ -82,3 +83,8 @@ Commands:
     Provides Kills/Deaths/Headshot Percentage and KDR stats to the user.
  <br>
    Permission:  stats
+ <br>
+ <br>
+/ammo x
+<br>
+Gives you ammo.  Maximum limit is set by ammoClipLimit in the configuration.
